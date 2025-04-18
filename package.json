@@ -1,0 +1,18 @@
+{
+	"name": "@sbesson/airzone-notify",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "Notifie les changements d'état de la pompe à chaleur Airzone",
+	"main": "src/index.js",
+	"scripts": {
+		"start": "node .",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Serge BESSON <serge@famille-besson.com>",
+	"license": "GPL-3.0",
+	"dependencies": {
+		"@sbesson/configuration-loader": "^1.0.4",
+		"winston": "^3.17.0",
+		"ws": "^8.16.0"
+	}
+}
