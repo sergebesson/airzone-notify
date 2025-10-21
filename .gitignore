@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Debug logs
+npm-debug.log*
+
+# Build directory
+coverage/
+
+# Custom directories
+data/
+
+# Editor directories and files
+.vscode/
