@@ -16,6 +16,10 @@ const log = getLogger();
  */
 async function main() {
 	try {
+		log.info("---------------------------------");
+		log.info("- Démarrage de 'airzone-notify' -");
+		log.info("---------------------------------");
+
 		// Étape 1: Connexion à Airzone Cloud
 		const token = await login();
 
@@ -42,6 +46,10 @@ async function main() {
 		console.error("Erreur générale:", errorMessage, errorCause, errorDetails);
 		console.error("Stack:", errorStack);
 	}
+	log.info("");
+	log.info("---------------------------------");
+	log.info("- Démarrage terminé             -");
+	log.info("---------------------------------");
 }
 
 // Lancement de l'application

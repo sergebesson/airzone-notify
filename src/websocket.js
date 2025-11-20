@@ -1,7 +1,9 @@
 // @ts-check
 
-import { WEBSOCKET_URL } from "./services/ApiConfiguration.js";
+import { login } from "./login.js";
+import { WEBSOCKET_URL, WEBSOCKET_DELAY_BEFORE_RECONNECTION_MS } from "./services/ApiConfiguration.js";
 import { getLogger } from "./services/logger.js";
+import { NtfyService } from "./services/ntfy.js";
 import { WebsocketMessage } from "./websocket-message.js";
 
 const log = getLogger();
@@ -43,6 +45,7 @@ export function connectWebSocket(token, installation) {
 	log.verbose("Connexion au WebSocket Airzone...");
 
 	const websocketMessage = new WebsocketMessage(installation);
+	const ntfyService = new NtfyService();
 
 	const wsUrl = `${WEBSOCKET_URL}?jwt=${token}&EIO=4&transport=websocket`;
 	ws = new WebSocket(wsUrl);
@@ -50,6 +53,11 @@ export function connectWebSocket(token, installation) {
 	ws.addEventListener("open", () => {
 		log.verbose("Connexion WebSocket établie");
 		log.verbose("En attente d'événements...");
+		ntfyService.sendNotification({
+			title: `Connexion WebSocket établie`,
+			message: `La connexion WebSocket a été établie avec succès.`,
+			tags: ["heavy_check_mark"],
+		});
 		ws?.send(`${CODE_MESSAGE}${TYPE_OPEN}`);
 	});
 
@@ -112,19 +120,41 @@ export function connectWebSocket(token, installation) {
 		}
 	});
 
-	ws.addEventListener("close", () => {
-		log.verbose("Connexion WebSocket fermée");
+	ws.addEventListener("close", (event) => {
+		log.verbose("Connexion WebSocket fermée", event);
+		ntfyService.sendNotification({
+			title: `Déconnexion WebSocket (close)`,
+			message: `La connexion WebSocket a été fermée.`,
+			tags: ["warning"],
+		});
+		reconnectWebSocket();
+	});
+	ws.addEventListener("error", (event) => {
+		log.error("Erreur WebSocket", event);
+		ntfyService.sendNotification({
+			title: `Erreur WebSocket`,
+			message: `Une erreur est survenue dans la connexion WebSocket.`,
+			tags: ["warning"],
+		});
+		reconnectWebSocket();
+	});
+
+	async function reconnectWebSocket() {
+		// ws?.close();
 		ws = null;
 		if (!isStopping) {
-			log.verbose("Tentative de reconnexion dans 5 secondes...");
-			setTimeout(() => {
+			log.verbose(`Tentative de reconnexion dans ${WEBSOCKET_DELAY_BEFORE_RECONNECTION_MS} secondes...`);
+			setTimeout(async () => {
+				ntfyService.sendNotification({
+					title: `Reconnexion WebSocket`,
+					message: `Tentative de reconnexion au WebSocket...`,
+					tags: ["warning"],
+				});
+				const token = await login();
 				connectWebSocket(token, installation);
-			}, 5000);
+			}, WEBSOCKET_DELAY_BEFORE_RECONNECTION_MS);
 		}
-	});
-	ws.addEventListener("error", () => {
-		log.error("Erreur WebSocket");
-	});
+	}
 }
 
 /**
